@@ -21,7 +21,7 @@ class ScoreChecker:
         protocol = protocol.lower()
         if protocol != "http" and protocol != "https":
             raise ValueError(f"Error on ScoreChecker object {self.name}: Invalid protocol (should be http or https)")
-        response = requests.get(protocol + "://" + self.ip + ":" + str(self.port))
+        response = requests.get(protocol + "://" + self.ip + ":" + str(self.port),verify=False) #this ignores SSL by design because most training scenarios are going to be self-signed.
         return [response.status_code,response.text]
 
     def ping(self):
@@ -44,7 +44,6 @@ class ScoreChecker:
         pass
 
 
-
     def test(self): #maps self.type to the method to call
         methods = {
             "ping": self.ping,
@@ -57,7 +56,7 @@ class ScoreChecker:
             raise ValueError(f"Unknown test type \"{self.type}\"")
         return methods[self.type](self.arguments)
 
-    
+
 
         #with ThreadPoolExecutor(10) as pool: #Not sure where i go from here
 

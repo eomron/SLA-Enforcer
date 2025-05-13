@@ -1,8 +1,11 @@
 from concurrent.futures import ThreadPoolExecutor
 from scorer import ScoreChecker
+numChecks = 10
+
+
 def runTests(scorers: list):
     results = []
-    with ThreadPoolExecutor(max_workers=10) as pool:
+    with ThreadPoolExecutor(max_workers=numChecks) as pool:
         futures = {pool.submit(scorer.test): scorer for scorer in scorers}
         for future in futures:
             scorer = futures[future]
