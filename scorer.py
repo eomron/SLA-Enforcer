@@ -1,25 +1,28 @@
 import ipaddress
 import socket
+import requests
 import struct
 import subprocess
-from concurrent.futures import ThreadPoolExecutor
 
-
-class Scorer:
+class ScoreChecker:
     def __init__(self,name: str,ip: str,port: int,*args):
         self.name: str = name
         try:
             ipaddress.ip_address(ip)
         except ValueError:
-            raise ValueError(f"Error on Scorer object {self.name}: Invalid IP address {ip}")
+            raise ValueError(f"Error on ScoreChecker object {self.name}: Invalid IP address {ip}. Format as a standard IPv4 address. Do not use CIDR postfixes (i.e. /24, /17).")
         self.ip: str = ip
         self.port: int = port
-        self.type: str = "ping" if len(args) == 0 else args[0]
+        self.type: str = "ping" if len(args) == 0 else args[0] #when calling the arguments list, remember that args[0] is the type of check
         arguments = args
 
 
-    def url(self): #several checks call the target as a webpage; this method fetches the data.
-        pass
+    def url(self,protocol: str): #several checks call the target as a webpage; this method fetches the data.
+        protocol = protocol.lower()
+        if protocol != "http" and protocol != "https":
+            raise ValueError(f"Error on ScoreChecker object {self.name}: Invalid protocol (should be http or https)")
+        response = requests.get(protocol + "://" + self.ip + ":" + str(self.port))
+        return [response.status_code,response.text]
 
     def ping(self):
         try:
@@ -28,7 +31,7 @@ class Scorer:
         except(socket.timeout, ConnectionRefusedError, OSError):
                 return(False)
 
-    def content(self):
+    def httpcontent(self):
         pass
 
     def index(self):
@@ -52,7 +55,7 @@ class Scorer:
         }
         if self.type not in methods:
             raise ValueError(f"Unknown test type \"{self.type}\"")
-        return methods[self.type]()
+        return methods[self.type](self.arguments)
 
     
 
@@ -71,6 +74,3 @@ class Scorer:
 #        if self.type == "smb": #check that a SMB share on the target is accessible
 #            pass
 
-quit
-def example_code():
-    scorers = []
