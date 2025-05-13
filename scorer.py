@@ -5,6 +5,7 @@ import struct
 import subprocess
 import sys
 import os
+import smbclient as smb
 
 if __name__ == "__main__" and os.path.basename(sys.argv[0]) != "run.py": #if we run this file by accident, it executes run.py anyway
     import run
@@ -58,12 +59,12 @@ class ScoreChecker:
         else:
             raise ValueError(f"Error on ScoreChecker object {self.name}: Web check requested, but protocol not specified.")
         page: str = args[0] if len(args) > 0 else ""
-        page = page.strip("/")
+        page = page.strip("/\\")
         response = requests.get(protocol + "://" + self.ip + ":" + str(self.port) + "/" + page,verify=False) #this ignores SSL by design because most training scenarios are going to be self-signed.
         return (response.status_code,response.text)
 
     def ping(self,*args) -> bool: #TODO: implement support for UDP 
-        '''
+        """
         Attempts to connect to the target on the specified port.
 
         Args:
@@ -71,7 +72,7 @@ class ScoreChecker:
 
         Returns:
             bool: Whether or not the attempt to connect was successful.
-        '''
+        """
         try:
             with socket.create_connection((self.ip,self.port),timeout=4):
                 return(True)
@@ -79,7 +80,7 @@ class ScoreChecker:
                 return(False)
 
     def content(self,*args) -> bool:
-        '''
+        """
         Checks that the target webpage contains a specific string.
 
         Args:
@@ -90,7 +91,7 @@ class ScoreChecker:
 
         Returns:
             bool: Whether or not the content was found.
-        '''
+        """
         if len(args) > 2:
             return(args[2] in self.url(args)[1])
         else:
@@ -117,13 +118,29 @@ class ScoreChecker:
     def dns(self,*args) -> bool:
         """
         
-        
         """
         pass
 
-    def smb(self):
-        pass
+    def smb(self,*args) -> bool:
+        """
+        Determines whether a specific folder or file is being shared over SMB. Requires a known username and password.
 
+        Args:
+            str: The username to use when creating the session
+            str: The password to use when creating the session
+            str: The file path to the shared folder
+            str: A specific file name in the folder (optional)
+
+        Returns:
+            bool: Whether or not it is being shared.
+        """
+        file = "\\" + args[3] if len(args) > 3 else ""
+        try:
+            smb.register_session(self.ip,args[0],args[1],self.port)
+            with smb.open_file(f"\\\\{self.ip}\\{args[2].strip(r"\\/")}{file}") as share:
+                return(True)
+        except(Exception):
+            return(False)
 
     def test(self): #maps self.type to the method to call
         methods = {
