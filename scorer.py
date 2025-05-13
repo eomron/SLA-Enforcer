@@ -48,13 +48,15 @@ class ScoreChecker:
 
         """
         protocol: str = ""
-        if args[1] == "https" or self.port == 443:
-            protocol = "https"
-        elif args[1] == "http" or self.port == 80:
-            protocol = "http"
+        if len(args) > 1: #ugly if block. apologies.
+            if args[1] == "http" or "https":
+                protocol = args[1]
+            else:
+                raise ValueError(f"Error on ScoreChecker object {self.name}: Invalid protocol (should be http or https)")
+        elif self.port == 80 or 443:
+            protocol = "https" if self.port == 443 else "http"
         else:
-            raise ValueError(f"Error on ScoreChecker object {self.name}: Invalid protocol (should be http or https)")
-        protocol = protocol.lower()
+            raise ValueError(f"Error on ScoreChecker object {self.name}: Web check requested, but protocol not specified.")
         page: str = args[0] if len(args) > 0 else ""
         page = page.strip("/")
         response = requests.get(protocol + "://" + self.ip + ":" + str(self.port) + "/" + page,verify=False) #this ignores SSL by design because most training scenarios are going to be self-signed.

@@ -2,8 +2,8 @@ from concurrent.futures import ThreadPoolExecutor
 from scorer import ScoreChecker
 
 def main():
-    checker = ScoreChecker("test","172.253.115.101",443)
-    print("\"" + str(checker.url("https")[0]) + "\"")
+    checker = ScoreChecker("test","172.253.115.101",80,"pageExists")
+    print("\"" + str(checker.url("","http")[0]) + "\"")
 
 def runTests(scorers: list,numChecks:int):
     results = []
