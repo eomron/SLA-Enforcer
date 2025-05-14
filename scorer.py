@@ -6,6 +6,7 @@ import subprocess
 import sys
 import os
 import smbclient as smb
+import dns.resolver
 
 if __name__ == "__main__" and os.path.basename(sys.argv[0]) != "run.py": #if we run this file by accident, it executes run.py anyway
     import run
@@ -117,8 +118,18 @@ class ScoreChecker:
 
     def dns(self,*args) -> bool:
         """
+        Checks whether the target is a DNS server and has a specific record. If no arguments are supplied, instead simply checks if it is a DNS server.
+
+        Args:
+            str: The record type
+            str: The desired value of the record
         
+        Returns:
+            bool: Whether the record is present, or whether it is a DNS server.
         """
+
+
+
         pass
 
     def smb(self,*args) -> bool:
@@ -137,10 +148,31 @@ class ScoreChecker:
         file = "\\" + args[3] if len(args) > 3 else ""
         try:
             smb.register_session(self.ip,args[0],args[1],self.port)
-            with smb.open_file(f"\\\\{self.ip}\\{args[2].strip(r"\\/")}{file}") as share:
+            with smb.open_file(fr"\\{self.ip}\{args[2].strip("\\/")}{file}") as share:
                 return(True)
         except(Exception):
             return(False)
+
+    def ftp(self,*args):
+        pass
+
+    def ad(self,*args):
+        pass
+
+    def dhcp(self,*args):
+        pass
+    
+    def smtp(self,*args):
+        pass
+
+    def pop3(self,*args):
+        pass
+    
+    def imap(self,*args):
+        pass
+    
+    def ntp(self,*args):
+        pass
 
     def test(self): #maps self.type to the method to call
         methods = {
@@ -148,8 +180,16 @@ class ScoreChecker:
             "content": self.content,
             "pageExists": self.pageExists,
             "dns": self.dns,
-            "smb": self.smb
+            "smb": self.smb,
+            "ftp": self.ftp,
+            "ad": self.ad,
+            "dhcp": self.dhcp,
+            "smtp": self.smtp,
+            "pop3": self.pop3,
+            "imap": self.imap,
+            "ntp": self.ntp
         }
+
         if self.type not in methods:
-            raise ValueError(f"Unknown test type \"{self.type}\"")
+            raise ValueError(f"Error on ScoreChecker object {self.name}: unknown test type \"{self.type}\"")
         return methods[self.type](self.arguments) #because of how this is written, every method listed here must take a tuple in its arguments
