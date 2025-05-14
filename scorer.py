@@ -7,6 +7,7 @@ import sys
 import os
 import smbclient as smb
 import dns.resolver
+import ftplib
 
 if __name__ == "__main__" and os.path.basename(sys.argv[0]) != "run.py": #if we run this file by accident, it executes run.py anyway
     import run
@@ -121,16 +122,23 @@ class ScoreChecker:
         Checks whether the target is a DNS server and has a specific record. If no arguments are supplied, instead simply checks if it is a DNS server.
 
         Args:
+            str: The domain name
             str: The record type
             str: The desired value of the record
         
         Returns:
             bool: Whether the record is present, or whether it is a DNS server.
         """
-
-
-
-        pass
+        resolver = dns.resolver.Resolver()
+        resolver.nameservers = [self.ip]
+        try:
+            if len(args) > 0:                
+                answers = resolver.resolve(args[0],args[1])
+                return args[2] in [record.to_text() for record in answers]
+            else:
+                answer = resolver.resolve("google.com","A")
+        except (dns.resolver.NoAnswer,dns.resolver.NXDOMAIN,dns.resolver.Timeout,dns.resolver.NoNameservers) as e:
+            return False
 
     def smb(self,*args) -> bool:
         """
@@ -153,8 +161,23 @@ class ScoreChecker:
         except(Exception):
             return(False)
 
-    def ftp(self,*args):
-        pass
+    def ftp(self,*args): #TODO: implement file download
+        """
+        Attempts to connect to the target's FTP server using the specified credentials. If none are supplied, it uses anonymous and a blank password.
+
+        Args:
+            str: The username to use when connecting. Default anonymous.
+            str: The password to use when connecting. Default is an empty string.
+        
+        Returns:
+            bool: Whether or not the target is reachable over FTP.
+        """
+        request = ftplib.FTP(user="anonymous" if len(args)==0 else args[0],passwd="" if len(args)==0 else args[1])
+        try:
+            request.connect(host=self.ip,port=self.port if self.port != 21 else 21)
+            return True
+        except(ftplib.Error):
+            return False
 
     def ad(self,*args):
         pass
